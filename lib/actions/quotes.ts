@@ -11,7 +11,17 @@ export async function getQuotes(filters?: {
 }) {
   const user = await requireAuth()
 
-  const where: any = {
+  interface WhereClause {
+    orgId: string
+    status?: ProjectStatus
+    ownerUserId?: string
+    OR?: Array<{
+      title?: { contains: string; mode: "insensitive" }
+      clientName?: { contains: string; mode: "insensitive" }
+    }>
+  }
+
+  const where: WhereClause = {
     orgId: user.orgId,
   }
 

@@ -16,9 +16,39 @@ const statusLabels: Record<ProjectStatus, string> = {
   archived: "アーカイブ",
 }
 
+interface EstimateItem {
+  id: string
+  category: string
+  role: string
+  days: number | string
+}
+
+interface Estimate {
+  items: EstimateItem[]
+  totalDays: number
+  totalAmount: number
+}
+
+interface Quote {
+  id: string
+  status: string
+  pmApproverUserId: string
+  salesApproverUserId: string
+  pmApprovedAt: Date | null
+  salesApprovedAt: Date | null
+  requirements: unknown
+  reviewComments: unknown[]
+  pmApprover: {
+    name: string
+  }
+  salesApprover: {
+    name: string
+  }
+}
+
 interface SidePanelProps {
-  quote: any
-  estimate: any
+  quote: Quote
+  estimate: Estimate | null
   currentUserId?: string
 }
 
@@ -57,8 +87,9 @@ export default function SidePanel({ quote, estimate, currentUserId }: SidePanelP
     try {
       await approveByPM(quote.id)
       router.refresh()
-    } catch (error: any) {
-      alert(error.message || "承認に失敗しました")
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "承認に失敗しました"
+      alert(errorMessage)
       console.error(error)
     } finally {
       setIsLoading(false)
@@ -70,8 +101,9 @@ export default function SidePanel({ quote, estimate, currentUserId }: SidePanelP
     try {
       await approveBySales(quote.id)
       router.refresh()
-    } catch (error: any) {
-      alert(error.message || "承認に失敗しました")
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "承認に失敗しました"
+      alert(errorMessage)
       console.error(error)
     } finally {
       setIsLoading(false)
@@ -91,7 +123,7 @@ export default function SidePanel({ quote, estimate, currentUserId }: SidePanelP
         <div>
           <h3 className="mb-2 text-lg font-semibold">見積もり</h3>
           <div className="space-y-2 rounded-lg bg-gray-50 p-4">
-            {estimate.items.map((item: any) => (
+            {estimate.items.map((item) => (
               <div key={item.id} className="flex justify-between text-sm">
                 <span>
                   {item.category} ({item.role})

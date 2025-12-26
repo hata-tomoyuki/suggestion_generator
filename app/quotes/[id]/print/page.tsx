@@ -45,11 +45,11 @@ export default async function PrintPage({
 
         {quote.proposalSections && quote.proposalSections.length > 0 && (
           <div className="space-y-8">
-            {quote.proposalSections.map((section: any) => (
+            {quote.proposalSections.map((section) => (
               <section key={section.id} className="break-inside-avoid">
                 <h2 className="mb-4 text-2xl font-semibold">{section.title}</h2>
                 <div className="space-y-4">
-                  {section.blocks.map((block: any) => (
+                  {section.blocks.map((block) => (
                     <div key={block.id} className="break-inside-avoid">
                       {block.blockType === "paragraph" ? (
                         <p className="text-sm leading-relaxed">{block.content}</p>
@@ -80,7 +80,7 @@ export default async function PrintPage({
                 </tr>
               </thead>
               <tbody>
-                {estimate.items.map((item: any) => {
+                {estimate.items.map((item) => {
                   const rate =
                     item.role === "pm"
                       ? estimate.rateCard.pmDayRate

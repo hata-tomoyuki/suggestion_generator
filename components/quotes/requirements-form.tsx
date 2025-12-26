@@ -4,9 +4,28 @@ import { useState, useEffect } from "react"
 import { saveRequirements } from "@/lib/actions/requirements"
 import { computeEstimate } from "@/lib/actions/estimate"
 
+interface RequirementPayload {
+  templateScale?: string
+  screenMin?: number
+  screenMax?: number
+  dataComplexity?: string
+  features?: {
+    auth?: boolean
+    rbac?: boolean
+    crud?: boolean
+    search?: boolean
+    externalApi?: boolean
+  }
+  nonFunctional?: {
+    performance?: boolean
+    security?: boolean
+    operation?: boolean
+  }
+}
+
 interface RequirementsFormProps {
   projectId: string
-  initialData?: any
+  initialData?: RequirementPayload
 }
 
 export default function RequirementsForm({

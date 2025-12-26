@@ -1,6 +1,12 @@
 import { getQuote } from "@/lib/actions/quotes"
 import EditBlockModal from "@/components/proposal/edit-block-modal"
 
+interface ProposalBlock {
+  id: string
+  content: string
+  blockType: string
+}
+
 export default async function EditBlockPage({
   params,
 }: {
@@ -8,7 +14,7 @@ export default async function EditBlockPage({
 }) {
   const { id, blockId } = await params
   const quote = await getQuote(id)
-  const block = quote?.proposalBlocks.find((b: any) => b.id === blockId)
+  const block = quote?.proposalBlocks.find((b: ProposalBlock) => b.id === blockId)
 
   if (!quote || !block) {
     return <div>ブロックが見つかりません</div>

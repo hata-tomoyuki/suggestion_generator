@@ -85,7 +85,7 @@ export const computeEstimate = cache(async (projectId: string) => {
   const dataComplexityFactor = DATA_COMPLEXITY_FACTORS[requirements.dataComplexity]
 
   // 基本工数計算
-  let baseDays = baseScreen * screenFactor * dataComplexityFactor
+  const baseDays = baseScreen * screenFactor * dataComplexityFactor
 
   // 機能加算
   let featureDays = 0

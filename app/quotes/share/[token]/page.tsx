@@ -43,26 +43,30 @@ export default async function SharePage({
     )
   }
 
+  let shareLink
+  let quote
+
   try {
-    const shareLink = await verifyShareLink(token, password)
-    const quote = await getQuote(shareLink.projectId)
-
-    if (!quote) {
-      return <div>案件が見つかりません</div>
-    }
-
-    return <ShareView quote={quote} />
-  } catch (error: any) {
+    shareLink = await verifyShareLink(token, password)
+    quote = await getQuote(shareLink.projectId)
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "エラーが発生しました"
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="w-full max-w-md rounded-lg bg-white p-8 shadow">
           <div className="text-center text-red-600">
             <p className="text-lg font-semibold">エラー</p>
-            <p className="mt-2">{error.message}</p>
+            <p className="mt-2">{errorMessage}</p>
           </div>
         </div>
       </div>
     )
   }
+
+  if (!quote) {
+    return <div>案件が見つかりません</div>
+  }
+
+  return <ShareView quote={quote} />
 }
 

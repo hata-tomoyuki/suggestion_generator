@@ -3,7 +3,26 @@
 import { prisma } from "@/lib/prisma"
 import { requireAuth } from "@/lib/auth"
 
-export async function saveRequirements(projectId: string, payload: any) {
+interface RequirementPayload {
+  templateScale?: string
+  screenMin?: number
+  screenMax?: number
+  dataComplexity?: string
+  features?: {
+    auth?: boolean
+    rbac?: boolean
+    crud?: boolean
+    search?: boolean
+    externalApi?: boolean
+  }
+  nonFunctional?: {
+    performance?: boolean
+    security?: boolean
+    operation?: boolean
+  }
+}
+
+export async function saveRequirements(projectId: string, payload: RequirementPayload) {
   await requireAuth()
 
   await prisma.quoteRequirement.upsert({

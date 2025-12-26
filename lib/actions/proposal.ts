@@ -13,8 +13,28 @@ interface ProposalSection {
   }>
 }
 
+interface RequirementPayload {
+  templateScale?: string
+  screenMin?: number
+  screenMax?: number
+  dataComplexity?: string
+  features?: {
+    auth?: boolean
+    rbac?: boolean
+    crud?: boolean
+    search?: boolean
+    externalApi?: boolean
+  }
+  nonFunctional?: {
+    performance?: boolean
+    security?: boolean
+    operation?: boolean
+  }
+}
+
 // 提案書のテンプレート（簡易版）
-function generateProposalTemplate(requirements: any): ProposalSection[] {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function generateProposalTemplate(_requirements: RequirementPayload): ProposalSection[] {
   const sections: ProposalSection[] = [
     {
       sectionKey: "background",

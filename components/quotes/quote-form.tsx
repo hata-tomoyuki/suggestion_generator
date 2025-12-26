@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 
 interface User {
   id: string
@@ -134,12 +135,12 @@ export default function QuoteForm({ users, onSubmit }: QuoteFormProps) {
       </div>
 
       <div className="flex justify-end space-x-4">
-        <a
+        <Link
           href="/quotes"
           className="rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50"
         >
           キャンセル
-        </a>
+        </Link>
         <button
           type="submit"
           disabled={isSubmitting}
