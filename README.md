@@ -21,6 +21,8 @@ cat > .env << 'EOF'
 DATABASE_URL="postgresql://postgres:postgres@localhost:5434/suggestion_generator?schema=public"
 
 # NextAuth
+# AUTH_SECRET はセキュアなランダム文字列を設定してください
+# 生成方法: openssl rand -base64 32
 AUTH_SECRET="your-secret-key-here-change-in-production"
 AUTH_URL="http://localhost:3000"
 EOF
