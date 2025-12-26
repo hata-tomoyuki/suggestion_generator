@@ -1,0 +1,301 @@
+// schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  admin
+  editor
+  viewer
+}
+
+enum ProjectStatus {
+  draft
+  review
+  approved
+  shared
+  archived
+}
+
+enum ProposalBlockType {
+  paragraph
+  bullet
+}
+
+enum CommentStatus {
+  open
+  resolved
+}
+
+enum PdfExportStatus {
+  queued
+  done
+  failed
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  users     User[]
+  rateCards RateCard[]
+  projects  QuoteProject[]
+
+  @@map("organizations")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  email     String   @unique
+  role      UserRole @default(editor)
+  createdAt DateTime @default(now())
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  // relations
+  ownedProjects QuoteProject[] @relation("ProjectOwner")
+  pmApprovals   QuoteProject[] @relation("PmApprover")
+  salesApprovals QuoteProject[] @relation("SalesApprover")
+
+  comments       ReviewComment[]
+  resolvedComments ReviewComment[] @relation("ResolvedBy")
+
+  shareLinksCreated ShareLink[] @relation("ShareLinkCreatedBy")
+  pdfExports       PdfExport[] @relation("PdfExportGeneratedBy")
+
+  @@index([orgId])
+  @@map("users")
+}
+
+model RateCard {
+  id          String   @id @default(cuid())
+  orgId       String
+  version     Int
+  isActive    Boolean  @default(false)
+
+  pmDayRate     Int
+  devDayRate    Int
+  designDayRate Int
+
+  createdAt DateTime @default(now())
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, version])
+  @@index([orgId, isActive])
+  @@map("rate_cards")
+}
+
+model QuoteProject {
+  id        String        @id @default(cuid())
+  orgId     String
+  title     String
+
+  clientName        String
+  clientContactName String?
+  clientEmail       String?
+
+  ownerUserId       String
+  pmApproverUserId  String
+  salesApproverUserId String
+
+  status            ProjectStatus @default(draft)
+
+  pmApprovedAt      DateTime?
+  salesApprovedAt   DateTime?
+
+  // For caching / invalidation signals
+  requirementsUpdatedAt DateTime @default(now())
+  contentUpdatedAt      DateTime @default(now())
+
+  // Template selection
+  templateScale   String  // "small" | "medium" | "large"
+  templateVersion Int     @default(1)
+
+  rateCardVersion Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  owner User @relation("ProjectOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  pmApprover User @relation("PmApprover", fields: [pmApproverUserId], references: [id], onDelete: Restrict)
+  salesApprover User @relation("SalesApprover", fields: [salesApproverUserId], references: [id], onDelete: Restrict)
+
+  requirements QuoteRequirement?
+  estimateItems EstimateItem[]
+  proposalSections ProposalSection[]
+  proposalBlocks ProposalBlock[]
+  reviewComments ReviewComment[]
+  shareLinks ShareLink[]
+  pdfExports PdfExport[]
+
+  @@index([orgId, status])
+  @@index([orgId, ownerUserId])
+  @@index([orgId, pmApproverUserId])
+  @@index([orgId, salesApproverUserId])
+  @@map("quote_projects")
+}
+
+model QuoteRequirement {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+
+  payload   Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project QuoteProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("quote_requirements")
+}
+
+model EstimateItem {
+  id        String   @id @default(cuid())
+  projectId String
+
+  // e.g. "frontend", "backend", "requirements", "qa", "search" ...
+  category  String
+  // "pm" | "dev" | "design"
+  role      String
+
+  // Use Decimal for precise quarter-day increments
+  days      Decimal  @db.Decimal(6, 2)
+  note      String?
+  isOverridden Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project QuoteProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([projectId, category])
+  @@index([projectId, role])
+  @@unique([projectId, category, role])
+  @@map("estimate_items")
+}
+
+model ProposalSection {
+  id        String @id @default(cuid())
+  projectId String
+
+  sectionKey  String // background/scope/estimate/...
+  title       String
+  orderIndex  Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project QuoteProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  blocks  ProposalBlock[]
+
+  @@unique([projectId, sectionKey])
+  @@index([projectId, orderIndex])
+  @@map("proposal_sections")
+}
+
+model ProposalBlock {
+  id        String            @id @default(cuid())
+  projectId String
+  sectionId String
+
+  blockType ProposalBlockType
+  // 安定キー（クリック/コメント/再生成の衝突回避）
+  blockKey  String
+
+  content   String
+  orderIndex Int
+
+  isOverridden Boolean @default(false)
+  archived     Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project QuoteProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  section ProposalSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  comments ReviewComment[]
+
+  @@unique([projectId, blockKey])
+  @@index([projectId, sectionId, orderIndex])
+  @@index([projectId, archived])
+  @@map("proposal_blocks")
+}
+
+model ReviewComment {
+  id        String        @id @default(cuid())
+  projectId String
+  blockId   String
+
+  authorUserId String
+  body      String
+  status    CommentStatus @default(open)
+
+  resolvedByUserId String?
+  resolvedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  project QuoteProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  block   ProposalBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
+
+  author User @relation(fields: [authorUserId], references: [id], onDelete: Restrict)
+  resolvedBy User? @relation("ResolvedBy", fields: [resolvedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([projectId, status])
+  @@index([blockId, status])
+  @@map("review_comments")
+}
+
+model ShareLink {
+  id        String   @id @default(cuid())
+  projectId String
+  token     String   @unique
+
+  passwordHash String
+  expiresAt    DateTime
+
+  createdByUserId String
+  createdAt DateTime @default(now())
+  revokedAt DateTime?
+
+  project QuoteProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy User @relation("ShareLinkCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([projectId])
+  @@index([expiresAt])
+  @@map("share_links")
+}
+
+model PdfExport {
+  id        String         @id @default(cuid())
+  projectId String
+
+  fileKey   String
+  status    PdfExportStatus @default(queued)
+
+  // Snapshot for reproducibility/audit
+  sourceSnapshot Json
+
+  generatedByUserId String
+  generatedAt DateTime @default(now())
+
+  errorMessage String?
+
+  project QuoteProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  generatedBy User @relation("PdfExportGeneratedBy", fields: [generatedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([projectId, generatedAt(sort: Desc)])
+  @@map("pdf_exports")
+}
