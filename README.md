@@ -1,37 +1,137 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 見積・提案書ジェネレーター
 
-## Getting Started
+見積作成から提案書生成、レビュー、承認、共有まで一気通貫で行うNext.jsアプリケーション
 
-First, run the development server:
+## セットアップ
+
+### 1. 依存パッケージのインストール
+
+```bash
+npm install
+```
+
+### 2. 環境変数の設定
+
+`.env`ファイルを作成し、以下の内容を設定してください：
+
+```bash
+# .envファイルを作成
+cat > .env << 'EOF'
+# Database
+DATABASE_URL="postgresql://postgres:postgres@localhost:5434/suggestion_generator?schema=public"
+
+# NextAuth
+AUTH_SECRET="your-secret-key-here-change-in-production"
+AUTH_URL="http://localhost:3000"
+EOF
+```
+
+または、手動で`.env`ファイルを作成して上記の内容をコピーしてください。
+
+### 3. DockerでPostgreSQLを起動
+
+```bash
+docker-compose up -d
+```
+
+データベースが起動したことを確認:
+
+```bash
+docker-compose ps
+```
+
+### 4. データベースマイグレーション
+
+```bash
+npm run db:migrate
+```
+
+### 5. Prisma Clientの生成
+
+```bash
+npm run db:generate
+```
+
+### 6. Seedデータの投入（オプション）
+
+```bash
+npm run db:seed
+```
+
+### 7. 開発サーバーの起動
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ブラウザで [http://localhost:3000](http://localhost:3000) を開いてください。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 使用方法
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### ログイン
 
-## Learn More
+以下のテストアカウントでログインできます（現在は簡易認証のため、パスワードは任意です）:
 
-To learn more about Next.js, take a look at the following resources:
+- `admin@example.com` - 管理者
+- `editor@example.com` - 編集者
+- `pm@example.com` - PM承認者
+- `sales@example.com` - 営業承認者
+- `viewer@example.com` - 閲覧者
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 案件の作成と管理
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. `/quotes` で案件一覧を確認
+2. 「新規作成」ボタンで案件を作成
+3. 案件詳細ページで要件入力、提案書生成、承認フローを実行
 
-## Deploy on Vercel
+## Dockerコマンド
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### データベースの起動
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# suggestion_generator
+```bash
+docker-compose up -d
+```
+
+### データベースの停止
+
+```bash
+docker-compose down
+```
+
+### データベースの停止とデータ削除
+
+```bash
+docker-compose down -v
+```
+
+### データベースのログ確認
+
+```bash
+docker-compose logs -f postgres
+```
+
+## 技術スタック
+
+- **フロントエンド**: Next.js 16.1.1 + React 19 + TypeScript + Tailwind CSS
+- **バックエンド**: Server Actions + Prisma ORM
+- **データベース**: PostgreSQL (Docker)
+- **認証**: NextAuth.js v5
+
+## プロジェクト構造
+
+```
+app/
+  quotes/
+    [id]/
+      @form/          # Parallel Route: 要件入力
+      @preview/       # Parallel Route: 提案書プレビュー
+      @side/          # Parallel Route: 見積・承認・共有
+      @modal/         # Intercepting Route: モーダル
+lib/
+  actions/            # Server Actions
+  prisma.ts           # Prisma Client
+components/           # Reactコンポーネント
+prisma/
+  schema.prisma       # Prismaスキーマ
+  seed.ts             # Seedデータ
+```

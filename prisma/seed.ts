@@ -1,6 +1,10 @@
-import { PrismaClient, UserRole } from '@prisma/client'
+import 'dotenv/config'
+import { UserRole } from '@prisma/client'
+import { prisma } from '../lib/prisma'
 
-const prisma = new PrismaClient()
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL environment variable is not set')
+}
 
 async function main() {
   console.log('Seeding database...')
