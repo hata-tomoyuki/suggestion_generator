@@ -2,11 +2,11 @@
 
 import { prisma } from "@/lib/prisma"
 import { cache } from "react"
-import { Decimal } from "@prisma/client/runtime/library"
+import { Prisma } from "@prisma/client"
 
 // 0.25人日刻みで丸める関数
-function roundToQuarterDay(days: number): Decimal {
-  return new Decimal(Math.round(days * 4) / 4)
+function roundToQuarterDay(days: number): Prisma.Decimal {
+  return new Prisma.Decimal(Math.round(days * 4) / 4)
 }
 
 // ベース画面数
@@ -71,7 +71,11 @@ export const computeEstimate = cache(async (projectId: string) => {
     throw new Error("Project or requirements not found")
   }
 
-  const requirements = project.requirements.payload as RequirementPayload
+  const payload = project.requirements.payload
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    throw new Error("Invalid requirements payload")
+  }
+  const requirements = payload as unknown as RequirementPayload
   const rateCard = project.org.rateCards[0]
 
   if (!rateCard) {
@@ -150,7 +154,12 @@ export const computeEstimate = cache(async (projectId: string) => {
     Number(designDays) * rateCard.designDayRate
 
   return {
-    items,
+    items: items.map((item) => ({
+      id: item.id,
+      category: item.category,
+      role: item.role,
+      days: Number(item.days),
+    })),
     totalDays,
     totalAmount,
     rateCard,

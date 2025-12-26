@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { requireAuth } from "@/lib/auth"
 import { getQuote } from "@/lib/actions/quotes"
-import { PdfExportStatus } from "@prisma/client"
+import { PdfExportStatus, Prisma } from "@prisma/client"
 
 export async function generatePdfExport(projectId: string) {
   const user = await requireAuth()
@@ -59,7 +59,7 @@ export async function generatePdfExport(projectId: string) {
     projectId: quote.id,
     title: quote.title,
     clientName: quote.clientName,
-    sections: quote.proposalSections.map((section: ProposalSection) => ({
+    sections: quote.proposalSections.map((section) => ({
       id: section.id,
       title: section.title,
       blocks: section.blocks.map((block: ProposalBlock) => ({
@@ -68,7 +68,7 @@ export async function generatePdfExport(projectId: string) {
         blockType: block.blockType,
       })),
     })),
-    estimateItems: quote.estimateItems.map((item: EstimateItem) => ({
+    estimateItems: quote.estimateItems.map((item) => ({
       id: item.id,
       category: item.category,
       role: item.role,
@@ -83,7 +83,7 @@ export async function generatePdfExport(projectId: string) {
       projectId,
       fileKey: `pdf/${projectId}/${Date.now()}.pdf`,
       status: PdfExportStatus.queued,
-      sourceSnapshot: snapshot,
+      sourceSnapshot: snapshot as unknown as Prisma.InputJsonValue,
       generatedByUserId: user.id,
     },
   })

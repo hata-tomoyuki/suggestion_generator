@@ -144,6 +144,7 @@ export async function getQuote(id: string) {
         },
         orderBy: { orderIndex: "asc" },
       },
+      proposalBlocks: true,
       reviewComments: {
         where: { status: "open" },
         include: {

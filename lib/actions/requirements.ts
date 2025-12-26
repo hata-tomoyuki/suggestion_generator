@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { requireAuth } from "@/lib/auth"
+import { Prisma } from "@prisma/client"
 
 interface RequirementPayload {
   templateScale?: string
@@ -28,11 +29,11 @@ export async function saveRequirements(projectId: string, payload: RequirementPa
   await prisma.quoteRequirement.upsert({
     where: { projectId },
     update: {
-      payload,
+      payload: payload as unknown as Prisma.InputJsonValue,
     },
     create: {
       projectId,
-      payload,
+      payload: payload as unknown as Prisma.InputJsonValue,
     },
   })
 

@@ -67,6 +67,20 @@ export default async function SharePage({
     return <div>案件が見つかりません</div>
   }
 
-  return <ShareView quote={quote} />
+  return (
+    <ShareView
+      quote={{
+        title: quote.title,
+        clientName: quote.clientName,
+        proposalSections: quote.proposalSections,
+        estimateItems: quote.estimateItems?.map((item) => ({
+          id: item.id,
+          category: item.category,
+          role: item.role,
+          days: Number(item.days),
+        })),
+      }}
+    />
+  )
 }
 

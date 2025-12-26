@@ -115,7 +115,7 @@ export default function SidePanel({ quote, estimate, currentUserId }: SidePanelP
       <div>
         <h3 className="mb-2 text-lg font-semibold">ステータス</h3>
         <div className="rounded-lg bg-gray-100 p-3">
-          <span className="text-sm font-medium">{statusLabels[quote.status]}</span>
+          <span className="text-sm font-medium">{statusLabels[quote.status as ProjectStatus]}</span>
         </div>
       </div>
 

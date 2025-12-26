@@ -16,7 +16,7 @@ interface EstimateItem {
   id: string
   category: string
   role: string
-  days: number | string
+  days: number
 }
 
 interface ShareViewProps {

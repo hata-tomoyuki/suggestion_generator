@@ -94,7 +94,11 @@ export async function generateProposal(projectId: string) {
     throw new Error("Project or requirements not found")
   }
 
-  const template = generateProposalTemplate(project.requirements.payload)
+  const payload = project.requirements.payload
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    throw new Error("Invalid requirements payload")
+  }
+  const template = generateProposalTemplate(payload as RequirementPayload)
 
   // 既存のセクションを削除（再生成の場合）
   await prisma.proposalSection.deleteMany({
@@ -149,7 +153,11 @@ export async function regenerateProposal(projectId: string) {
     throw new Error("Project or requirements not found")
   }
 
-  const template = generateProposalTemplate(project.requirements.payload)
+  const payload = project.requirements.payload
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    throw new Error("Invalid requirements payload")
+  }
+  const template = generateProposalTemplate(payload as RequirementPayload)
 
   // 未overrideのブロックのみ更新
   for (const sectionTemplate of template) {
